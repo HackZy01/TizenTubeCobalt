@@ -1,0 +1,62 @@
+name: Build TizenTube Cobalt APK
+
+on:
+  push:
+    branches: [ main, ytbranding ]
+  pull_request:
+    branches: [ main, ytbranding ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils-arm-linux-gnueabi libgles2-mesa-dev mesa-common-dev jq ninja-build
+
+      - name: Download Starboard Toolchain and Android SDK
+        run: |
+          # Use the provided scripts to download necessary toolchains
+          ./starboard/tools/download_clang.sh
+          ./starboard/android/shared/download_sdk.sh
+
+      - name: Create Debug Keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "cn=Cobalt, ou=Cobalt, o=Cobalt, c=US"
+
+      - name: Generate Build Files (GN)
+        run: |
+          # Configure for android-arm64 in QA mode
+          python3 cobalt/build/gn.py -p android-arm64 -c qa --args="sb_is_evergreen_compatible=true"
+
+      - name: Compile Native Targets (Ninja)
+        run: |
+          # Build crashpad handler first as required
+          ninja -C out/android-arm64_qa native_target/crashpad_handler
+
+      - name: Build APK (Ninja)
+        run: |
+          # Build the main loader_app APK
+          ninja -C out/android-arm64_qa loader_app_install
+
+      - name: Rename and Prepare Artifacts
+        run: |
+          mkdir -p artifacts
+          cp out/android-arm64_qa/loader_app.apk artifacts/TizenTube-Cobalt-arm64.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TizenTube-Cobalt-APK
+          path: artifacts/*.apk
