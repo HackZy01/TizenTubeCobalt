@@ -1,5 +1,6 @@
 name: Autoroll LTS
 
+on:
   workflow_dispatch:
     inputs:
       start_commit:
@@ -10,7 +11,7 @@ name: Autoroll LTS
         description: 'Max number of commits to include on a single PR'
         type: number
         default: 25
-
+        
 permissions:
   contents: read
 
