@@ -2,17 +2,25 @@ name: Build TizenTube Cobalt APK
 
 on:
   push:
-    branches: [ main, ytbranding ]
+    branches: [ main, master, ytbranding ]
   pull_request:
-    branches: [ main, ytbranding ]
+    branches: [ main, master, ytbranding ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Maximize Build Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: src
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -24,11 +32,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y binutils-arm-linux-gnueabi libgles2-mesa-dev mesa-common-dev jq ninja-build
 
-      - name: Download Starboard Toolchain and Android SDK
+      - name: Install Depot Tools
         run: |
-          # Use the provided scripts to download necessary toolchains
-          ./starboard/tools/download_clang.sh
-          ./starboard/android/shared/download_sdk.sh
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          echo "$GITHUB_WORKSPACE/depot_tools" >> $GITHUB_PATH
+
+      - name: Gclient Sync (Fetch Toolchains)
+        run: |
+          cd src
+          cp .github/config/android-arm64.json .gclient_config || true
+          gclient config --spec 'solutions = [{ "name": "src", "url": "https://github.com/${{ github.repository }}.git", "managed": False, "custom_deps": {}, "custom_vars": { "checkout_android": True }, }]'
+          # We only sync toolchains to save time/space
+          gclient sync --nohooks --no-history --shallow
+          python3 tools/clang/scripts/update.py
+          python3 build/android/unbundle/prepare_sdk.py || true
+          gclient runhooks
 
       - name: Create Debug Keystore
         run: |
@@ -37,26 +55,24 @@ jobs:
 
       - name: Generate Build Files (GN)
         run: |
-          # Configure for android-arm64 in QA mode
+          cd src
           python3 cobalt/build/gn.py -p android-arm64 -c qa --args="sb_is_evergreen_compatible=true"
 
-      - name: Compile Native Targets (Ninja)
+      - name: Compile (Ninja)
         run: |
-          # Build crashpad handler first as required
+          cd src
+          # Build crashpad handler then the APK
           ninja -C out/android-arm64_qa native_target/crashpad_handler
+          ninja -C out/android-arm64_qa cobalt_apk
 
-      - name: Build APK (Ninja)
-        run: |
-          # Build the main loader_app APK
-          ninja -C out/android-arm64_qa loader_app_install
-
-      - name: Rename and Prepare Artifacts
+      - name: Prepare Artifacts
         run: |
           mkdir -p artifacts
-          cp out/android-arm64_qa/loader_app.apk artifacts/TizenTube-Cobalt-arm64.apk
+          # Find the generated APK
+          find src/out/android-arm64_qa/ -name "*.apk" -exec cp {} artifacts/TizenTube-Cobalt-arm64.apk \;
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: TizenTube-Cobalt-APK
-          path: artifacts/*.apk
+          uses: actions/upload-artifact@v4
+          with:
+            name: TizenTube-Cobalt-APK
+            path: artifacts/*.apk
