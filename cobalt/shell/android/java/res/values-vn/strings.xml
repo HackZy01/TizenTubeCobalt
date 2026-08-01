@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  Copyright 2025 The Cobalt Authors. All Rights Reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<resources>
+<string name="url_hint">Nhập URL vào đây</string>
+    <string name="browser_process_initialization_failed">Khởi tạo thất bại.</string>
+    <!-- Error message when there's a problem connecting to the network. -->
+    <string name="starboard_platform_connection_error">Không thể kết nối lúc này</string>
+    <!-- Button label on network connection error to retry the request. -->
+    <string name="starboard_platform_retry">Thử lại</string>
+    <!-- Button label on network connection error to open system network settings. -->
+    <string name="starboard_platform_network_settings">Mở cài đặt mạng</string>
+    <!-- Button label to dismiss an error message dialog. -->
+    <string name="starboard_platform_dismiss">Bỏ qua</string>
+    <!-- Toast message when we can't get the device account to sign in. -->
+    <string name="starboard_account_picker_error">Tài khoản không khả dụng.</string>
+    <!-- Toast message when we the account can't be authorized. -->
+    <string name="starboard_account_auth_error">Xác thực tài khoản thất bại.</string>
+    <!-- Toast message indicating that the selected account is no longer available to sign-in. -->
+    <string name="starboard_missing_account">Tài khoản không khả dụng:\n%1$s</string>
+    <!-- Toast message shown when the user has denied permission to get device accounts. -->
+    <string name="starboard_accounts_permission">Đăng nhập yêu cầu cấp quyền truy cập Danh bạ trong cài đặt hệ thống.</string>
+</resources>
