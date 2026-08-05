@@ -12,33 +12,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Define your target OS/architecture and build type here
+        # Define your target OS/architecture here
         platform: [ linux-x64x11 ]
-        config: [ devel ]
+        # Switched to gold config
+        config: [ gold ]
 
     steps:
-      # Step 1: Check out the code using the custom cached action
-      - name: Checkout repository
+      # Step 1: Official GitHub checkout. This downloads your repo so the runner can see the ./actions folder.
+      - name: Initial Repository Checkout
+        uses: actions/checkout@v4
+
+      # Step 2: Custom checkout action for any submodule or caching operations
+      - name: Custom Cobalt Checkout
         uses: ./actions/checkout
 
-      # Step 2 & 3: Set up Depot Tools and initialize gclient
+      # Step 3: Set up Depot Tools
       - name: Setup Depot Tools
         uses: ./actions/depot_tools
         with:
           platform: ${{ matrix.platform }}
 
-      # (Optional) Setup Docker if your specific platform requires it
-      # - name: Setup Docker Environment
-      #   uses: ./actions/docker
-      #   with:
-      #     service: linux-x64x11
-
-      # Step 4, 5 & 6: Execute the build, generate Ninja files, and run Autoninja
+      # Step 4: Execute the build
       - name: Build Cobalt
         uses: ./actions/build
         with:
-          # Format as a JSON string
           targets: '["cobalt:gn_all"]'
           test_root_target: 'cobalt:gn_all'
-          # Point this to the correct config file for your platform
           test_targets_json_file: 'config/linux.json'
