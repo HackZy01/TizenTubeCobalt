@@ -1,0 +1,44 @@
+name: Cobalt Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Define your target OS/architecture and build type here
+        platform: [ linux-x64x11 ]
+        config: [ devel ]
+
+    steps:
+      # Step 1: Check out the code using the custom cached action
+      - name: Checkout repository
+        uses: ./actions/checkout
+
+      # Step 2 & 3: Set up Depot Tools and initialize gclient
+      - name: Setup Depot Tools
+        uses: ./actions/depot_tools
+        with:
+          platform: ${{ matrix.platform }}
+
+      # (Optional) Setup Docker if your specific platform requires it
+      # - name: Setup Docker Environment
+      #   uses: ./actions/docker
+      #   with:
+      #     service: linux-x64x11
+
+      # Step 4, 5 & 6: Execute the build, generate Ninja files, and run Autoninja
+      - name: Build Cobalt
+        uses: ./actions/build
+        with:
+          # Format as a JSON string
+          targets: '["cobalt:gn_all"]'
+          test_root_target: 'cobalt:gn_all'
+          # Point this to the correct config file for your platform
+          test_targets_json_file: 'config/linux.json'
