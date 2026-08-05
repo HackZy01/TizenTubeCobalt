@@ -7,35 +7,12 @@ on:
     branches: [ main ]
 
 jobs:
-  compile:
+  build-android:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # Define your target OS/architecture here
-        platform: [ linux-x64x11 ]
-        # Switched to gold config
-        config: [ gold ]
-
     steps:
-      # Step 1: Official GitHub checkout. This downloads your repo so the runner can see the ./actions folder.
-      - name: Initial Repository Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Custom checkout action for any submodule or caching operations
-      - name: Custom Cobalt Checkout
-        uses: ./actions/checkout
-
-      # Step 3: Set up Depot Tools
-      - name: Setup Depot Tools
-        uses: ./actions/depot_tools
-        with:
-          platform: ${{ matrix.platform }}
-
-      # Step 4: Execute the build
-      - name: Build Cobalt
-        uses: ./actions/build
-        with:
-          targets: '["cobalt:gn_all"]'
-          test_root_target: 'cobalt:gn_all'
-          test_targets_json_file: 'config/linux.json'
+      - name: Run Build
+        run: |
+            CONFIG=gold docker compose run android
