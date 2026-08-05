@@ -1,6 +1,6 @@
 name: Autoroll LTS
 
-#on:
+on:
 #  schedule:
 #    - cron: '0 * * * *' # Hourly.
   workflow_dispatch:
