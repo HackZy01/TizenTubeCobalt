@@ -14,10 +14,15 @@ on:
 jobs:
   build-arm64-apk:
     name: Build Android arm64-v8a APK
-    runs-on: ubuntu-latest # Replace with your self-hosted runner class if applicable
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      # Standard checkout to pull repository files onto the runner workspace
+      - name: Bootstrap Workspace
+        uses: actions/checkout@v4
+
+      # Now local actions inside ./actions/ are accessible
+      - name: Custom Workspace Setup
         uses: ./actions/checkout
 
       - name: Authenticate GoB
